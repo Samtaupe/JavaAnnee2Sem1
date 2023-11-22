@@ -45,7 +45,23 @@ public class GreyImage {
         return size;
     }
 
-    public short getPixel(int x, int y) {
+    public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
+	public short[] getData() {
+		return data;
+	}
+
+	public void setData(short[] data) {
+		this.data = data;
+	}
+
+	public short getPixel(int x, int y) {
         if (isPosValid(x, y)) {
             return data[y * dimX + x];
         } else {

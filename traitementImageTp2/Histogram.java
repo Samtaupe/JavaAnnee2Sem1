@@ -1,6 +1,7 @@
 package traitementImageTp2;
 
 import java.io.*;
+import java.util.Arrays;
 
 import traitementImageTp1.GreyImage;
 
@@ -11,7 +12,7 @@ class Histogram {
 	
 	Histogram(GreyImage im)
 	{
-		
+		System.arraycopy(im.getData(), 0, this.data, 0, im.getSize());
 	}
 
 	void saveHisto(String filename) throws FileNotFoundException, IOException
