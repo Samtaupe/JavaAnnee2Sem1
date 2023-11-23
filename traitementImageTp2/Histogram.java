@@ -1,18 +1,47 @@
 package traitementImageTp2;
 
 import java.io.*;
-import java.util.Arrays;
 
 import traitementImageTp1.GreyImage;
 
 class Histogram {
 	
-	private short[] data;
-	private String minValue;
+	private int[] data;
+	private short minValue;
 	
 	Histogram(GreyImage im)
 	{
-		System.arraycopy(im.getData(), 0, this.data, 0, im.getSize());
+		this.minValue = im.getMin();
+		this.data = new int[im.getSizeData()];
+	}
+	
+	
+	
+	public int[] getData() {
+		return data;
+	}
+
+
+
+	public short getMinValue() {
+		return minValue;
+	}
+
+
+
+	int getValue(short v) {
+		if(v >= minValue) { return data[v-minValue]; }
+		return data[v];
+	}
+	
+	short getPeak() {
+		short peak = minValue;
+		for(int i = 0; i < data.length; i ++) {
+			if(getValue(peak) > getValue((short) (i))) {
+				peak = (short) (i + minValue);
+			}
+		}
+		return peak;
 	}
 
 	void saveHisto(String filename) throws FileNotFoundException, IOException
