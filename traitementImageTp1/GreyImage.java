@@ -3,6 +3,8 @@ package traitementImageTp1;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import traitementImageTp3.Mask;
+
 public class GreyImage {
     private int dimX, dimY, size;
     private short[] data;
@@ -171,5 +173,32 @@ public class GreyImage {
             }
     }
     
+    public GreyImage convolve(Mask m) {
+    	GreyImage img = new GreyImage(dimX, dimY);
+    	int p = m.getSizeX()/2;
+    	
+    	for(int i = 0; i < getSizeX(); i++) {
+    		for(int j = 0; j < getSizeY(); j++) {
+    			
+    			double sum = 0;
+    			
+    			for(int k = 0; k < m.getSizeX(); k++) {
+    				for(int l = 0; l < m.getSizeX(); l++) {
+    					
+    					if(isPosValid(i+k-p, j+l-p)) {
+    						sum+=m.getPixel(k, l)*getPixel(i+k-p, j+l-p);    						
+    					}
+    					
+    				}
+    			}
+    			if(m.getSumWeights()!=0) {
+    				sum/=m.getSumWeights();    				
+    			}
+                img.setPixel(i, j, (short) sum);
+    		}
+    	}
+    	
+    	return img;
+    }
 
 }

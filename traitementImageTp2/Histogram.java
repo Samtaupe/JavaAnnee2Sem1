@@ -55,8 +55,8 @@ public class Histogram {
         }
         
         for(int i = min; i < data.length; i ++) {
-        	data[i] = (255 * data[i])/cumulativeSum;
+        	data[i] = ((max-min)*data[i])/cumulativeSum+min;
         }
 
-    }    	
+    }
 }
