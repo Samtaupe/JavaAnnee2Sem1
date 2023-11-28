@@ -3,6 +3,10 @@ package traitementImageTp1;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 public class GreyImageTest {
 
     @Test

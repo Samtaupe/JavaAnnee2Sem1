@@ -4,12 +4,12 @@ import java.io.*;
 
 import traitementImageTp1.GreyImage;
 
-class Histogram {
+public class Histogram {
 
     private short minValue;
     private int[] data;
 
-    Histogram(GreyImage im) {
+    public Histogram(GreyImage im) {
         minValue = im.getMin();
         data = new int[im.getMax() - minValue + 1];
         for (short pixel : im.getData()) {
@@ -17,14 +17,14 @@ class Histogram {
         }
     }
 
-    int getValue(short v) {
+    public int getValue(short v) {
         if (v < minValue || v >= minValue + data.length) {
             throw new IllegalArgumentException("Invalid histogram value: " + v);
         }
         return data[v - minValue];
     }
 
-    short getPeak() {
+    public short getPeak() {
         int maxCount = 0;
         short peakValue = minValue;
         for (int i = 0; i < data.length; i++) {
@@ -36,14 +36,27 @@ class Histogram {
         return peakValue;
     }
 
-    void saveHisto(String filename) throws FileNotFoundException, IOException
+    public void saveHisto(String filename) throws FileNotFoundException, IOException
 	{
 		FileOutputStream fileout=new FileOutputStream(filename);
 		for(int i=0; i<data.length; i++)
 		{
-			String tmp=minValue+i + " " + data[i]+"\n";
+			String tmp=minValue+i + ", " + data[i]+"\n";
 			fileout.write(tmp.getBytes());
 		}
 		fileout.close();
 	}
+    
+    public void equalize(int min, int max) {
+        int cumulativeSum = 0;
+        
+        for(int i = min; i < data.length; i ++) {
+        	cumulativeSum += data[i];
+        }
+        
+        for(int i = min; i < data.length; i ++) {
+        	data[i] = (255 * data[i])/cumulativeSum;
+        }
+
+    }    	
 }

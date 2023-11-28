@@ -1,5 +1,8 @@
 package traitementImageTp1;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 public class GreyImage {
     private int dimX, dimY, size;
     private short[] data;
@@ -49,16 +52,8 @@ public class GreyImage {
 		return size;
 	}
 
-	public void setSize(int size) {
-		this.size = size;
-	}
-
 	public short[] getData() {
 		return data;
-	}
-
-	public void setData(short[] data) {
-		this.data = data;
 	}
 
 	public short getPixel(int x, int y) {
@@ -147,4 +142,34 @@ public class GreyImage {
             }
         }
     }
+    
+    public static GreyImage loadPGM(String filename) throws FileNotFoundException, IOException {
+        PGMFileIO pgmFileIO = new PGMFileIO(filename);
+        pgmFileIO.readPGM();
+
+        int sizeX = pgmFileIO.getSizeX();
+        int sizeY = pgmFileIO.getSizeY();
+        short[] data = pgmFileIO.getData();
+
+        return new GreyImage(sizeX, sizeY, data);
+    }
+    
+    public void savePGM(String filename) throws FileNotFoundException, IOException {
+        PGMFileIO pgmFileIO = new PGMFileIO(filename);
+        pgmFileIO.writePGM(dimX, dimY, data);
+    }
+    
+    public void adjustContrast(int min, int max) {
+        if (min >= max) {
+            throw new IllegalArgumentException("Valeurs du contraste invalide, le min ne peut être supérieur au max.");
+        }
+
+        short currentMin = getMin();
+        short currentMax = getMax();
+            for (int i = 0; i < size; i++) {
+                data[i] = (short) ((data[i] - currentMin) * (max - min) / (currentMax - currentMin) + min);
+            }
+    }
+    
+
 }
