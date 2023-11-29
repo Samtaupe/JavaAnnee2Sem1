@@ -2,6 +2,7 @@ package traitementImageTp1;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Random;
 
 import traitementImageTp3.Mask;
 
@@ -198,6 +199,37 @@ public class GreyImage {
     		}
     	}
     	
+    	return img;
+    }
+    
+    public GreyImage addRandomNoise(double p) {
+    	if(p > 1 || p < 0) {
+    		throw new IllegalArgumentException("p doit être compris entre 0 et 1");
+    	}
+    	
+    	GreyImage img = new GreyImage(getSizeX(), getSizeY(), getData());    	
+    	Random r = new Random();
+    	
+    	for(int i = 0; i < getSizeData(); i ++) {
+    		double x = r.nextDouble();
+    		
+    		if(x < p) {
+    			double y = r.nextDouble();
+    			setPixel(i, (short)(y>0.5?255:0));
+    		}
+    	}
+    	
+    	return img;
+    }
+    
+    public GreyImage addGaussianNoise(double mean, double std) {
+    	GreyImage img = new GreyImage(getSizeX(), getSizeY(), getData());
+    	Random r = new Random();
+    	for(int i = 0; i < getSizeData(); i++) {
+    		double x = r.nextGaussian();
+    		System.out.println(x);
+    		setPixel(i, (short) (0.4 + 50 * x));
+    	}
     	return img;
     }
 
