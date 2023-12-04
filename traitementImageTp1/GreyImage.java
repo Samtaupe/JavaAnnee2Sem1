@@ -2,6 +2,7 @@ package traitementImageTp1;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 import traitementImageTp3.Mask;
@@ -162,7 +163,11 @@ public class GreyImage {
         pgmFileIO.writePGM(dimX, dimY, data);
     }
     
-    public void adjustContrast(int min, int max) {
+    public void setData(short[] data) {
+		this.data = data;
+	}
+
+	public void adjustContrast(int min, int max) {
         if (min >= max) {
             throw new IllegalArgumentException("Valeurs du contraste invalide, le min ne peut être supérieur au max.");
         }
@@ -225,12 +230,194 @@ public class GreyImage {
     public GreyImage addGaussianNoise(double mean, double std) {
     	GreyImage img = new GreyImage(getSizeX(), getSizeY(), getData());
     	Random r = new Random();
-    	for(int i = 0; i < getSizeData(); i++) {
-    		double x = r.nextGaussian();
-    		System.out.println(x);
-    		setPixel(i, (short) (0.4 + 50 * x));
+    	for(int i = 0; i < getSizeX(); i++) {
+    		for(int j = 0; j < getSizeY(); j++) {
+    			double x = r.nextGaussian();
+    			short pixel = (short)(mean + std * x + getPixel(i, j));
+    			img.setPixel(i,j, pixel);
+    		}
     	}
     	return img;
+    }
+    
+    public GreyImage medianFilter(int maskSize) {
+        if (maskSize % 2 == 0) {
+            throw new IllegalArgumentException("La taille du mask doit être impaire.");
+        }
+
+        GreyImage result = new GreyImage(getSizeX(), getSizeY());
+
+        int halfSize = maskSize / 2;
+
+        for (int x = 0; x < getSizeX(); x++) {
+            for (int y = 0; y < getSizeY(); y++) {
+                int[] neighborhood = getNeighborhood(x, y, maskSize);
+                int median = calculateMedian(neighborhood);
+                result.setPixel(x, y, (short) median);
+            }
+        }
+
+        return result;
+    }
+
+    private int[] getNeighborhood(int x, int y, int maskSize) {
+        int[] neighborhood = new int[maskSize * maskSize];
+        int index = 0;
+
+        for (int i = -maskSize / 2; i <= maskSize / 2; i++) {
+            for (int j = -maskSize / 2; j <= maskSize / 2; j++) {
+                int newX = x + i;
+                int newY = y + j;
+
+                if (isPosValid(newX, newY)) {
+                    neighborhood[index++] = getPixel(newX, newY);
+                }
+            }
+        }
+
+        return Arrays.copyOf(neighborhood, index);
+    }
+
+    private int calculateMedian(int[] neighborhood) {
+        Arrays.sort(neighborhood);
+        int middle = neighborhood.length / 2;
+
+        if (neighborhood.length % 2 == 0) {
+            return (neighborhood[middle - 1] + neighborhood[middle]) / 2;
+        } else {
+            return neighborhood[middle];
+        }
+    }
+
+    public GreyImage gradient(GreyImage Ix, GreyImage Iy) {
+        GreyImage result = new GreyImage(getSizeX(), getSizeY());
+
+        for (int x = 0; x < getSizeX(); x++) {
+            for (int y = 0; y < getSizeY(); y++) {
+                int gradient = (int) Math.sqrt(Math.pow(Ix.getPixel(x, y), 2) + Math.pow(Iy.getPixel(x, y), 2));
+                result.setPixel(x, y, (short) gradient);
+            }
+        }
+
+        return result;
+    }
+
+    public double computeNMSE(GreyImage im) {
+        if (getSizeX() != im.getSizeX() || getSizeY() != im.getSizeY()) {
+            throw new IllegalArgumentException("Les images doivent avoir les mêmes dimensions");
+        }
+
+        double sumSquaredDiff = 0;
+        double sumSquaredOriginal = 0;
+
+        for (int x = 0; x < getSizeX(); x++) {
+            for (int y = 0; y < getSizeY(); y++) {
+                double diff = getPixel(x, y) - im.getPixel(x, y);
+                sumSquaredDiff += Math.pow(diff, 2);
+                sumSquaredOriginal += Math.pow(getPixel(x, y), 2);
+            }
+        }
+
+        return sumSquaredDiff / sumSquaredOriginal;
+    }
+
+    
+    
+    public GreyImage erode(Mask B) {
+        int p = B.getSizeX() / 2;
+        GreyImage img = new GreyImage(getSizeX(), getSizeY());
+
+        for (int i = 0; i < getSizeX(); i++) {
+            for (int j = 0; j < getSizeY(); j++) {
+            	
+                boolean isEroded = true;
+
+                for (int k = 0; k < B.getSizeX(); k++) {
+                    for (int l = 0; l < B.getSizeY(); l++) {
+                    	
+                    	int x = i+k-p;
+                    	int y = j+l-p;
+
+                        if (isPosValid(x, y)) {
+                            if (B.getPixel(k, l) == 1 && getPixel(x,y) != 255) {
+                                isEroded = false;
+                                break;
+                            }
+                        } else {
+                            if (B.getPixel(k, l) == 1) {
+                                isEroded = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!isEroded) {
+                        break;
+                    }
+                }
+
+                img.setPixel(i, j, isEroded ? (short) 255 : 0);
+            }
+        }
+        return img;
+    }
+
+
+    public GreyImage dilate(Mask B) {
+        int p = B.getSizeX() / 2;
+        GreyImage img = new GreyImage(getSizeX(), getSizeY());
+
+        for (int i = 0; i < getSizeX(); i++) {
+            for (int j = 0; j < getSizeY(); j++) {
+                boolean isDilated = false;
+
+                for (int k = 0; k < B.getSizeX(); k++) {
+                    for (int l = 0; l < B.getSizeY(); l++) {
+                        int x = i + k - p;
+                        int y = j + l - p;
+
+                        if (isPosValid(x, y)) {
+                            if (B.getPixel(k, l) == 1 && getPixel(x, y) == 255) {
+                                isDilated = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isDilated) {
+                        break;
+                    }
+                }
+
+                img.setPixel(i, j, isDilated ? (short) 255 : 0);
+            }
+        }
+
+        return img;
+    }
+    
+    public GreyImage open(Mask B) {
+    	GreyImage img = this.erode(B).dilate(B);
+    	return img;
+    	
+    }
+    public GreyImage close(Mask B) {
+    	GreyImage img = this.dilate(B).erode(B);
+    	return img;
+    	
+    }
+    
+    public GreyImage morphologicalGradient(GreyImage erode, GreyImage dilate) {   	
+    	GreyImage img = new GreyImage(getSizeX(), getSizeY());
+    	for (int i = 0; i < getSizeX(); i++) {
+            for (int j = 0; j < getSizeY(); j++) {
+                int diff = dilate.getPixel(i, j) - erode.getPixel(i, j);
+                img.setPixel(i, j, (short)diff);
+            }
+        }
+    	return img;
+    	
+    	
     }
 
 }
