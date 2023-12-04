@@ -247,8 +247,6 @@ public class GreyImage {
 
         GreyImage result = new GreyImage(getSizeX(), getSizeY());
 
-        int halfSize = maskSize / 2;
-
         for (int x = 0; x < getSizeX(); x++) {
             for (int y = 0; y < getSizeY(); y++) {
                 int[] neighborhood = getNeighborhood(x, y, maskSize);
